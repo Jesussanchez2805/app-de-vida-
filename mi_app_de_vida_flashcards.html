@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi App de Vida · Flashcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple-50: #EEEDFE;
+      --purple-200: #AFA9EC;
+      --purple-600: #534AB7;
+      --purple-800: #3C3489;
+      --teal-50: #E1F5EE;
+      --teal-600: #0F6E56;
+      --teal-800: #085041;
+      --amber-50: #FAEEDA;
+      --amber-600: #854F0B;
+      --amber-800: #633806;
+      --pink-50: #FBEAF0;
+      --pink-600: #993556;
+      --pink-800: #72243E;
+      --blue-50: #E6F1FB;
+      --blue-600: #185FA5;
+      --blue-800: #0C447C;
+      --gray-50: #F1EFE8;
+      --gray-200: #B4B2A9;
+      --gray-600: #5F5E5A;
+      --bg: #F7F5F2;
+      --surface: #FFFFFF;
+      --text-primary: #1A1A18;
+      --text-secondary: #5F5E5A;
+      --text-tertiary: #9A9893;
+      --border: rgba(26,26,24,0.1);
+      --border-strong: rgba(26,26,24,0.2);
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 22px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .app-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--purple-600);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(83,74,183,0.3);
+    }
+
+    .app-icon svg { width: 28px; height: 28px; }
+
+    .header-text h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      color: var(--text-primary);
+      line-height: 1.1;
+      font-weight: 400;
+    }
+
+    .header-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      font-weight: 300;
+    }
+
+    .hint-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      margin-bottom: 2rem;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .hint-bar svg { width: 16px; height: 16px; opacity: 0.5; flex-shrink: 0; }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .card-scene {
+      height: 230px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .card-scene:focus-visible { outline: 2px solid var(--purple-600); outline-offset: 3px; border-radius: var(--radius-lg); }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.45, 0, 0.15, 1);
+    }
+
+    .card-scene.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-xl);
+      border: 0.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.4rem 1.5rem;
+      text-align: center;
+      background: var(--surface);
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: var(--gray-50);
+      align-items: flex-start;
+      text-align: left;
+      justify-content: flex-start;
+      padding-top: 1.25rem;
+    }
+
+    .card-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .card-icon-wrap svg { width: 20px; height: 20px; }
+
+    .card-tag {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 3px;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 300;
+    }
+
+    .flip-hint {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .back-module {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .card-question {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .card-input {
+      width: 100%;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      font-size: 12px;
+      background: var(--surface);
+      color: var(--text-primary);
+      resize: none;
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.4;
+      outline: none;
+    }
+
+    .purpose-row { width: 100%; margin-bottom: 4px; }
+    .purpose-label { font-size: 10px; color: var(--text-tertiary); display: block; margin-bottom: 1px; }
+    .purpose-input {
+      width: 100%; border: none; border-bottom: 1px dashed var(--border-strong);
+      background: transparent; font-size: 12px; color: var(--text-primary);
+      font-family: var(--font-body); font-style: italic; outline: none; padding: 2px 0;
+    }
+
+    .generate-btn {
+      margin-top: 10px; padding: 8px 16px; font-size: 12px;
+      background: var(--purple-600); color: #fff; border: none;
+      border-radius: 8px; cursor: pointer; font-weight: 500; width: 100%;
+    }
+
+    #result-box {
+      margin-top: 2rem; background: var(--surface); border: 0.5px solid var(--border);
+      border-radius: var(--radius-xl); padding: 2rem; display: none;
+      animation: fadeUp 0.6s ease; border-left: 4px solid var(--purple-600);
+    }
+
+    #result-box.visible { display: block; }
+    .result-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--purple-600); font-weight: 600; margin-bottom: 15px; }
+    .result-phrase { font-family: var(--font-display); font-size: 1.25rem; color: var(--text-primary); line-height: 1.6; margin-bottom: 1.5rem; }
+    .future-msg { font-size: 14px; color: var(--text-secondary); line-height: 1.6; padding-top: 1rem; border-top: 1px solid var(--gray-50); font-style: italic; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .footer { text-align: center; margin-top: 3rem; font-size: 12px; color: var(--text-tertiary); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div class="app-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Mi App de Vida</h1>
+      <p>Jesús · Sistema Operativo Personal</p>
+    </div>
+  </header>
+
+  <div class="hint-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    Explora tus módulos. Los datos de ejemplo reflejan tu búsqueda de equilibrio y crecimiento.
+  </div>
+
+  <div class="cards-grid">
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--purple-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+          <span class="card-tag" style="background:var(--purple-50);color:var(--purple-600);">Módulo 1</span>
+          <p class="card-title">Pantalla de inicio</p>
+          <p class="card-subtitle">Tu primera impresión</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Pantalla de inicio</span>
+          <p class="card-question">¿Qué quiero proyectar?</p>
+          <textarea id="val-inicio" class="card-input" rows="4" onclick="event.stopPropagation()">Quiero que sientan una profunda tranquilidad y confianza. Mi app es un espacio de desarrollo personal donde el orden invita a crecer con calma.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--teal-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></div>
+          <span class="card-tag" style="background:var(--teal-50);color:var(--teal-600);">Configuraciones</span>
+          <p class="card-title">Valores: ajustes internos</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Valores No Negociables</span>
+          <textarea id="val-valores" class="card-input" rows="4" onclick="event.stopPropagation()">1. Compromiso total con mis metas.
+2. Orden en mi mente y entorno.
+3. Confianza en mi proceso y en los demás.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--amber-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#BA7517" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <span class="card-tag" style="background:var(--amber-50);color:var(--amber-600);">Herramientas</span>
+          <p class="card-title">Talentos: funcionalidades</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Destrezas Únicas</span>
+          <textarea id="val-talentos" class="card-input" rows="4" onclick="event.stopPropagation()">Mi pensamiento lógico para resolver problemas, mi integridad inquebrantable y mis ganas constantes de aprender cosas nuevas.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--pink-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#D4537E" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <span class="card-tag" style="background:var(--pink-50);color:var(--pink-600);">Notificaciones</span>
+          <p class="card-title">Pasiones: energía</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Flow</span>
+          <textarea id="val-pasiones" class="card-input" rows="4" onclick="event.stopPropagation()">Disfruto profundamente el tiempo de calidad con mi familia y el adquirir nuevo conocimiento que expanda mis horizontes.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--blue-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <span class="card-tag" style="background:var(--blue-50);color:var(--blue-600);">Usuarios</span>
+          <p class="card-title">Impacto: servicio</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Comunidad</span>
+          <textarea id="val-impacto-desc" class="card-input" rows="4" onclick="event.stopPropagation()">Mi familia, mis futuros colegas y mi comunidad se benefician de mi estabilidad y de mi capacidad para construir soluciones ordenadas y confiables.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-scene" onclick="flip(this)">
+      <div class="card-inner">
+        <div class="card-face">
+          <div class="card-icon-wrap" style="background:var(--purple-50);"><svg viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <span class="card-tag" style="background:var(--purple-50);color:var(--purple-600);">Sistema operativo</span>
+          <p class="card-title">Propósito</p>
+        </div>
+        <div class="card-face card-back">
+          <span class="back-module">Configuración Final</span>
+          <div class="purpose-row"><span class="purpose-label">Misión</span><input id="mision" class="purpose-input" type="text" value="crear un legado de estabilidad" onclick="event.stopPropagation()" /></div>
+          <div class="purpose-row"><span class="purpose-label">Talentos</span><input id="talento" class="purpose-input" type="text" value="mi lógica y ganas de aprender" onclick="event.stopPropagation()" /></div>
+          <div class="purpose-row"><span class="purpose-label">Impacto</span><input id="impacto" class="purpose-input" type="text" value="mi familia y entorno cercano" onclick="event.stopPropagation()" /></div>
+          <button class="generate-btn" onclick="event.stopPropagation(); processApp()">Ejecutar Mi App de Vida →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="result-box">
+    <p class="result-label">Diagnóstico de Sistema: Jesús OS</p>
+    <p class="result-phrase" id="result-text"></p>
+    <p class="future-msg" id="future-text"></p>
+  </div>
+
+  <footer class="footer">Mi App de Vida · Proyectando Confianza y Desarrollo</footer>
+</div>
+
+<script>
+  function flip(el) { el.classList.toggle('flipped'); }
+
+  function processApp() {
+    const mision = document.getElementById('mision').value;
+    const talento = document.getElementById('talento').value;
+    const impacto = document.getElementById('impacto').value;
+    const valores = document.getElementById('val-valores').value.replace(/\n/g, ' ');
+    
+    // Frase de propósito
+    const phrase = `"Mi App de Vida existe para ${mision}, usando ${talento} y aportando a ${impacto}."`;
+    
+    // Generador de "Futuro/Mensaje Motivacional"
+    const mensajes = [
+      `Jesús, tu futuro está codificado con **orden** y **compromiso**. Gracias a tu capacidad lógica, los problemas complejos se transformarán en peldaños hacia tu éxito personal.`,
+      `El sistema detecta una alta compatibilidad entre tus ganas de aprender y tu misión. Sigue cultivando esa confianza; eres el arquitecto de una vida tranquila y llena de significado.`,
+      `Tu compromiso con los tuyos es el motor más potente que existe. La 'App de tu Vida' no tiene errores cuando el corazón y la lógica trabajan en equipo.`
+    ];
+    
+    const randomMsg = mensajes[Math.floor(Math.random() * mensajes.length)];
+
+    document.getElementById('result-text').textContent = phrase;
+    document.getElementById('future-text').innerHTML = `<strong>Mensaje del Sistema:</strong> ${randomMsg}`;
+    
+    const box = document.getElementById('result-box');
+    box.classList.add('visible');
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>
+</body>
+</html>
